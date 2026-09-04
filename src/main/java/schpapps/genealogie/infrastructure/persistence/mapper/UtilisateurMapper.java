@@ -6,7 +6,10 @@ import schpapps.genealogie.infrastructure.persistence.model.UtilisateurModel;
 /**
  * Le mapper entre {@link UtilisateurModel} et {@link Utilisateur}.
  */
-public class UtilisateurMapper {
+public final class UtilisateurMapper {
+
+    private UtilisateurMapper() {
+    }
 
     /**
      * Convertit un {@link Utilisateur} en un {@link UtilisateurModel}.

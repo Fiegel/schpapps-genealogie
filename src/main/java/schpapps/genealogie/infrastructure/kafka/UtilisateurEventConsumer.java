@@ -8,10 +8,6 @@ import schpapps.genealogie.domain.events.UtilisateurCreeEvent;
 import schpapps.genealogie.domain.ports.inbound.EnregistrerUtilisateurScenario;
 import schpapps.genealogie.domain.ports.inbound.commande.EnregistrerUtilisateurCommande;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import static java.lang.System.Logger.Level.ERROR;
 
 /**
@@ -49,12 +45,6 @@ public class UtilisateurEventConsumer {
             final UtilisateurCreeEvent event = objectMapper.readValue(json, UtilisateurCreeEvent.class);
 
             var command = new EnregistrerUtilisateurCommande(event.id(), event.nom(), event.prenom());
-
-            List<UtilisateurCreeEvent> eventList = Collections.singletonList(event);
-
-            final UtilisateurCreeEvent[] array = eventList.toArray(new UtilisateurCreeEvent[0]);
-
-            Arrays.parallelSort(new int[]{1, 2, 3, 4});
 
             enregistrerUtilisateurScenario.executer(command);
         } catch (JsonProcessingException e) {
