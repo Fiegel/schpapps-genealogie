@@ -1,5 +1,5 @@
 # Job exécuté lors d'un MERGE vers main (lance tous les tests et le scan Sonar)
-name: Merge to Main Validation (TU + TI + SonarQube)
+name: Merge to Main Validation
 
 on:
   push:
@@ -29,4 +29,5 @@ jobs:
         run: |
           mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.organization=jecash666 \
-            -Dsonar.projectKey=Fiegel_schpapps-genealogie
+            -Dsonar.projectKey=Fiegel_schpapps-genealogie \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml
