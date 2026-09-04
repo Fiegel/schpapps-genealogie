@@ -1,4 +1,5 @@
-name: Java CI & Quality
+# Job exécuté lors d'une PR vers main (lance tous les tests et le scan Sonar)
+name: Pull Request Validation (TU + TI + SonarQube)
 
 on:
   pull_request:
