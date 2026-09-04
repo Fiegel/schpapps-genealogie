@@ -14,6 +14,7 @@ import java.time.LocalDate;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class IndividuResourceTest {
@@ -26,7 +27,7 @@ class IndividuResourceTest {
         // Given
         final Individu individuProvided = Individu.generer("Fiegel", "Jérémy", Sexe.HOMME, LocalDate.of(1984, 11, 9));
 
-        Mockito.when(creerIndividuScenario.executer(Mockito.any(CreerIndividuCommande.class)))
+        when(creerIndividuScenario.executer(Mockito.any(CreerIndividuCommande.class)))
                 .thenReturn(individuProvided);
 
         final String payloadJsonProvided = """

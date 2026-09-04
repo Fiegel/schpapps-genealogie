@@ -7,7 +7,10 @@ import schpapps.genealogie.infrastructure.persistence.model.IndividuModel;
 /**
  * Le mapper entre {@link IndividuModel} et {@link Individu}.
  */
-public class IndividuMapper {
+public final class IndividuMapper {
+
+    private IndividuMapper() {
+    }
 
     /**
      * Convertit un {@link Individu} en un {@link IndividuModel}.
