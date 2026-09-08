@@ -1,10 +1,11 @@
 package schpapps.genealogie.infrastructure.kafka;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import schpapps.genealogie.domain.events.UtilisateurCreeEvent;
 import schpapps.genealogie.domain.ports.inbound.TraiterUtilisateurCreeUseCase;
 import schpapps.genealogie.domain.ports.inbound.commande.TraiterUtilisateurCreeCommande;
+import schpapps.genealogie.infrastructure.kafka.event.UtilisateurCreeEvent;
 
 /**
  * Le consumer des événements Kafka liés aux utilisateurs.
@@ -29,6 +30,7 @@ public class UtilisateurEventConsumer {
      * @param event L'événement de création d'un utilisateur.
      */
     @Incoming("utilisateurs-events")
+    @Transactional
     public void consommer(final UtilisateurCreeEvent event) {
         var commande = new TraiterUtilisateurCreeCommande(event.id(), event.nom(), event.prenom());
 

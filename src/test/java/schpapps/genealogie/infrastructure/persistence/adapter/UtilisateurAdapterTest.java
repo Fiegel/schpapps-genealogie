@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @QuarkusTest
 @TestTransaction
-public class UtilisateurAdapterTest {
+class UtilisateurAdapterTest {
 
     @Inject
     private UtilisateurAdapter utilisateurAdapter;
