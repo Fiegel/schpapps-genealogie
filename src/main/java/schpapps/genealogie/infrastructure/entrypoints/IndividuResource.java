@@ -52,11 +52,7 @@ public class IndividuResource {
 
         final Individu individu = creerIndividuUseCase.executer(commande);
 
-        final CreerIndividuResponse response = new CreerIndividuResponse(individu.id,
-                individu.nom,
-                individu.prenom,
-                individu.sexe.name(),
-                individu.dateNaissance);
+        final CreerIndividuResponse response = CreerIndividuResponse.from(individu);
 
         return Response.status(Response.Status.CREATED).entity(response).build();
     }
