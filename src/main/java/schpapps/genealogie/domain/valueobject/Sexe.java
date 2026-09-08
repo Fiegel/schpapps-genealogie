@@ -23,10 +23,6 @@ public enum Sexe {
      * @return L'enum correspondante.
      */
     public static Sexe getByName(final String name) {
-        if (name == null) {
-            return INCONNU;
-        }
-
-        return SEXE_BY_NAME_MAP.getOrDefault(name, INCONNU);
+        return name == null ? INCONNU : SEXE_BY_NAME_MAP.getOrDefault(name, INCONNU);
     }
 }
