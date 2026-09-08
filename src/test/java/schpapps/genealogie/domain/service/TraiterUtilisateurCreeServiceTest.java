@@ -3,11 +3,10 @@ package schpapps.genealogie.domain.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import schpapps.genealogie.domain.ports.InMemoryUtilisateurRepository;
 import schpapps.genealogie.domain.ports.inbound.commande.TraiterUtilisateurCreeCommande;
-import schpapps.genealogie.provider.BlankStringsProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -45,7 +44,7 @@ class TraiterUtilisateurCreeServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ArgumentsSource(BlankStringsProvider.class)
+    @MethodSource("schpapps.genealogie.provider.TestProviders#blankStrings")
     void echec_quand_id_est_blank(final String idInvalideProvided) {
         // When
         assertThatThrownBy(() -> new TraiterUtilisateurCreeCommande(idInvalideProvided, "Doe", "John"))
@@ -55,7 +54,7 @@ class TraiterUtilisateurCreeServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ArgumentsSource(BlankStringsProvider.class)
+    @MethodSource("schpapps.genealogie.provider.TestProviders#blankStrings")
     void echec_quand_nom_est_blank(final String nomInvalideProvided) {
         // When
         assertThatThrownBy(() -> new TraiterUtilisateurCreeCommande("123", nomInvalideProvided, "John"))
@@ -65,7 +64,7 @@ class TraiterUtilisateurCreeServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ArgumentsSource(BlankStringsProvider.class)
+    @MethodSource("schpapps.genealogie.provider.TestProviders#blankStrings")
     void echec_quand_prenom_est_blank(final String prenomInvalideProvided) {
         // When
         assertThatThrownBy(() -> new TraiterUtilisateurCreeCommande("123", "Doe", prenomInvalideProvided))

@@ -17,6 +17,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+/**
+ * Tests d'intégration de la consommation d'événements de création d'utilisateurs.
+ */
 @QuarkusTest
 class UtilisateurEventConsumerIT {
 

@@ -1,6 +1,7 @@
 package schpapps.genealogie.domain.ports.inbound.commande;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 /**
  * La commande de la création d'un individu.
@@ -32,7 +33,7 @@ public record CreerIndividuCommande(String nom,
             throw new IllegalArgumentException("Le prénom ne peut pas être vide.");
         }
 
-        if (dateNaissance != null && dateNaissance.isAfter(LocalDate.now())) {
+        if (dateNaissance != null && dateNaissance.isAfter(LocalDate.now(ZoneOffset.UTC))) {
             throw new IllegalArgumentException("La date de naissance ne peut pas être dans le futur.");
         }
     }

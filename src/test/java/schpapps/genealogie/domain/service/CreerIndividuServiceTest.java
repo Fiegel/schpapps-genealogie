@@ -3,13 +3,12 @@ package schpapps.genealogie.domain.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import schpapps.genealogie.domain.entite.Individu;
 import schpapps.genealogie.domain.ports.InMemoryIndividuRepository;
 import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
-import schpapps.genealogie.provider.BlankStringsProvider;
-import schpapps.genealogie.provider.FutureLocalDateProvider;
+import schpapps.genealogie.domain.valueobject.Sexe;
 
 import java.time.LocalDate;
 
@@ -55,9 +54,33 @@ class CreerIndividuServiceTest {
         assertThat(individuRepository.getById(individuResponseActual.id)).isPresent();
     }
 
+    @Test
+    void succes_avec_champs_optionnels() {
+        // Given
+        final String nomProvided = "Doe";
+        final String prenomProvided = "John";
+        final String sexeProvided = null;
+        final LocalDate dateNaissanceProvided = null;
+
+        final CreerIndividuCommande commandeProvided = new CreerIndividuCommande(nomProvided, prenomProvided, sexeProvided, dateNaissanceProvided);
+
+        // When
+        final Individu individuResponseActual = creerIndividuService.executer(commandeProvided);
+
+        // Then
+        assertThat(individuResponseActual).isNotNull();
+        assertThat(individuResponseActual.id).isNotBlank();
+        assertThat(individuResponseActual.nom).isEqualTo(nomProvided);
+        assertThat(individuResponseActual.prenom).isEqualTo(prenomProvided);
+        assertThat(individuResponseActual.sexe).isEqualTo(Sexe.INCONNU);
+        assertThat(individuResponseActual.dateNaissance).isNull();
+
+        assertThat(individuRepository.getById(individuResponseActual.id)).isPresent();
+    }
+
     @ParameterizedTest
-    @NullAndEmptySource
-    @ArgumentsSource(BlankStringsProvider.class)
+    @NullSource
+    @MethodSource("schpapps.genealogie.provider.TestProviders#blankStrings")
     void echec_quand_nom_est_blank(final String nomInvalideProvided) {
         // When
         assertThatThrownBy(() -> new CreerIndividuCommande(nomInvalideProvided, "John", "HOMME", LocalDate.of(1999, 1, 10)))
@@ -66,8 +89,8 @@ class CreerIndividuServiceTest {
     }
 
     @ParameterizedTest
-    @NullAndEmptySource
-    @ArgumentsSource(BlankStringsProvider.class)
+    @NullSource
+    @MethodSource("schpapps.genealogie.provider.TestProviders#blankStrings")
     void echec_quand_prenom_est_blank(final String prenomInvalideProvided) {
         // When
         assertThatThrownBy(() -> new CreerIndividuCommande("Doe", prenomInvalideProvided, "HOMME", LocalDate.of(1999, 1, 10)))
@@ -76,7 +99,7 @@ class CreerIndividuServiceTest {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(FutureLocalDateProvider.class)
+    @MethodSource("schpapps.genealogie.provider.TestProviders#futureLocalDates")
     void echec_quand_dateNaissance_dans_le_futur(final LocalDate dateNaissanceInvalideProvided) {
         // When
         assertThatThrownBy(() -> new CreerIndividuCommande("Doe", "John", "HOMME", dateNaissanceInvalideProvided))
