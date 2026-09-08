@@ -10,7 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import schpapps.genealogie.domain.entite.Individu;
-import schpapps.genealogie.domain.ports.inbound.CreerIndividuScenario;
+import schpapps.genealogie.domain.ports.inbound.CreerIndividuUseCase;
 import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
 import schpapps.genealogie.infrastructure.entrypoints.dto.CreerIndividuRequest;
 import schpapps.genealogie.infrastructure.entrypoints.dto.CreerIndividuResponse;
@@ -23,15 +23,15 @@ import schpapps.genealogie.infrastructure.entrypoints.dto.CreerIndividuResponse;
 @Consumes(MediaType.APPLICATION_JSON)
 public class IndividuResource {
 
-    private final CreerIndividuScenario creerIndividuScenario;
+    private final CreerIndividuUseCase creerIndividuUseCase;
 
     /**
      * Constructeur valué.
      *
-     * @param creerIndividuScenario Le scénario de création d'un individu.
+     * @param creerIndividuUseCase Le scénario de création d'un individu.
      */
-    public IndividuResource(final CreerIndividuScenario creerIndividuScenario) {
-        this.creerIndividuScenario = creerIndividuScenario;
+    public IndividuResource(final CreerIndividuUseCase creerIndividuUseCase) {
+        this.creerIndividuUseCase = creerIndividuUseCase;
     }
 
     /**
@@ -50,7 +50,7 @@ public class IndividuResource {
                 request.sexe(),
                 request.dateNaissance());
 
-        final Individu individu = creerIndividuScenario.executer(commande);
+        final Individu individu = creerIndividuUseCase.executer(commande);
 
         final CreerIndividuResponse response = new CreerIndividuResponse(individu.id,
                 individu.nom,

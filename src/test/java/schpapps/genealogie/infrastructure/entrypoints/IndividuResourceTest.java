@@ -6,7 +6,7 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import schpapps.genealogie.domain.entite.Individu;
-import schpapps.genealogie.domain.ports.inbound.CreerIndividuScenario;
+import schpapps.genealogie.domain.ports.inbound.CreerIndividuUseCase;
 import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
 import schpapps.genealogie.domain.valueobject.Sexe;
 
@@ -20,14 +20,14 @@ import static org.mockito.Mockito.when;
 class IndividuResourceTest {
 
     @InjectMock
-    private CreerIndividuScenario creerIndividuScenario;
+    private CreerIndividuUseCase creerIndividuUseCase;
 
     @Test
     void succes_creerIndividu_retour_201() {
         // Given
         final Individu individuProvided = Individu.generer("Fiegel", "Jérémy", Sexe.HOMME, LocalDate.of(1984, 11, 9));
 
-        when(creerIndividuScenario.executer(Mockito.any(CreerIndividuCommande.class)))
+        when(creerIndividuUseCase.executer(Mockito.any(CreerIndividuCommande.class)))
                 .thenReturn(individuProvided);
 
         final String payloadJsonProvided = """

@@ -6,7 +6,7 @@ import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
 /**
  * Scénario de la création d'un individu.
  */
-public interface CreerIndividuScenario {
+public interface CreerIndividuUseCase {
 
     /**
      * Exécute la création d'un individu.

@@ -1,7 +1,7 @@
 package schpapps.genealogie.domain.service;
 
 import schpapps.genealogie.domain.entite.Utilisateur;
-import schpapps.genealogie.domain.ports.inbound.TraiterUtilisateurCreeScenario;
+import schpapps.genealogie.domain.ports.inbound.TraiterUtilisateurCreeUseCase;
 import schpapps.genealogie.domain.ports.inbound.commande.TraiterUtilisateurCreeCommande;
 import schpapps.genealogie.domain.ports.outbound.UtilisateurRepository;
 
@@ -10,7 +10,7 @@ import static java.lang.System.Logger.Level.INFO;
 /**
  * Le service de traitement des events de création d'utilisateurs.
  */
-public class TraiterUtilisateurCreeService implements TraiterUtilisateurCreeScenario {
+public class TraiterUtilisateurCreeService implements TraiterUtilisateurCreeUseCase {
 
     private static final System.Logger LOGGER = System.getLogger(TraiterUtilisateurCreeService.class.getName());
 
