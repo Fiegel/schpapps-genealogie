@@ -1,7 +1,7 @@
 package schpapps.genealogie.domain.service;
 
 import schpapps.genealogie.domain.entite.Individu;
-import schpapps.genealogie.domain.ports.inbound.CreerIndividuScenario;
+import schpapps.genealogie.domain.ports.inbound.CreerIndividuUseCase;
 import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
 import schpapps.genealogie.domain.ports.outbound.IndividuRepository;
 import schpapps.genealogie.domain.valueobject.Sexe;
@@ -11,7 +11,7 @@ import static java.lang.System.Logger.Level.INFO;
 /**
  * Le service de création des individus.
  */
-public class CreerIndividuService implements CreerIndividuScenario {
+public class CreerIndividuService implements CreerIndividuUseCase {
 
     private static final System.Logger LOGGER = System.getLogger(CreerIndividuService.class.getName());
 

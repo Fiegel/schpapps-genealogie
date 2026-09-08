@@ -5,7 +5,7 @@ import schpapps.genealogie.domain.ports.inbound.commande.TraiterUtilisateurCreeC
 /**
  * Scénario de traitement d'un événement de création d'un utilisateur.
  */
-public interface TraiterUtilisateurCreeScenario {
+public interface TraiterUtilisateurCreeUseCase {
 
     /**
      * Exécute le traitement d'un événement de création d'un utilisateur.
