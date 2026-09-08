@@ -1,55 +1,79 @@
 package schpapps.genealogie.infrastructure.entrypoints;
 
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import schpapps.genealogie.domain.entite.Individu;
 import schpapps.genealogie.domain.ports.inbound.CreerIndividuUseCase;
 import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
 import schpapps.genealogie.domain.valueobject.Sexe;
+import schpapps.genealogie.infrastructure.entrypoints.dto.CreerIndividuRequest;
+import schpapps.genealogie.infrastructure.entrypoints.dto.CreerIndividuResponse;
 
 import java.time.LocalDate;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@QuarkusTest
+/**
+ * Tests unitaires des endpoints REST sur les individus.
+ */
+@ExtendWith(MockitoExtension.class)
 class IndividuResourceTest {
 
-    @InjectMock
+    @Mock
     private CreerIndividuUseCase creerIndividuUseCase;
+
+    @InjectMocks
+    private IndividuResource individuResource;
 
     @Test
     void succes_creerIndividu_retour_201() {
         // Given
-        final Individu individuProvided = Individu.generer("Fiegel", "Jérémy", Sexe.HOMME, LocalDate.of(1984, 11, 9));
+        final LocalDate dateNaissanceProvided = LocalDate.of(1990, 1, 1);
+        final CreerIndividuRequest requestProvided = new CreerIndividuRequest("Dupont", "Jean", "HOMME", dateNaissanceProvided);
 
-        when(creerIndividuUseCase.executer(Mockito.any(CreerIndividuCommande.class)))
+        final Individu individuProvided = new Individu("indi-123", "Dupont", "Jean", Sexe.HOMME, dateNaissanceProvided);
+        when(creerIndividuUseCase.executer(any(CreerIndividuCommande.class)))
                 .thenReturn(individuProvided);
 
-        final String payloadJsonProvided = """
-                {
-                    "prenom": "Jérémy",
-                    "nom": "Fiegel",
-                    "sexe": "HOMME",
-                    "dateNaissance": "1984-11-09"
-                }
-                """;
+        // When
+        try (final Response responseActual = individuResource.creerIndividu(requestProvided)) {
+            // Then
+            assertThat(responseActual.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
+            assertThat(responseActual.getEntity()).isInstanceOf(CreerIndividuResponse.class);
+
+            final ArgumentCaptor<CreerIndividuCommande> argumentCaptor = ArgumentCaptor.forClass(CreerIndividuCommande.class);
+            verify(creerIndividuUseCase).executer(argumentCaptor.capture());
+
+            final CreerIndividuCommande commandeActual = argumentCaptor.getValue();
+            assertThat(commandeActual.nom()).isEqualTo("Dupont");
+            assertThat(commandeActual.prenom()).isEqualTo("Jean");
+            assertThat(commandeActual.sexe()).isEqualTo("HOMME");
+            assertThat(commandeActual.dateNaissance()).isEqualTo(dateNaissanceProvided);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("resource")
+    void echec_creerIndividu_use_case_exception() {
+        // Given
+        final LocalDate dateNaissanceProvided = LocalDate.of(1990, 1, 1);
+        final CreerIndividuRequest requestProvided = new CreerIndividuRequest("Dupont", "Jean", "HOMME", dateNaissanceProvided);
+
+        when(creerIndividuUseCase.executer(any()))
+                .thenThrow(new IllegalArgumentException("Données individu invalides"));
 
         // When - Then
-        given().contentType(ContentType.JSON)
-                .body(payloadJsonProvided)
-                .when()
-                .post("/api/individus")
-                .then()
-                .statusCode(201)
-                .body("id", equalTo(individuProvided.id))
-                .body("nom", equalTo("Fiegel"))
-                .body("prenom", equalTo("Jérémy"))
-                .body("sexe", equalTo(Sexe.HOMME.name()))
-                .body("dateNaissance", equalTo(LocalDate.of(1984, 11, 9).toString()));
+        assertThatThrownBy(() -> individuResource.creerIndividu(requestProvided))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Données individu invalides");
     }
 }
