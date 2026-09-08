@@ -11,7 +11,7 @@ import lombok.ToString;
  * Le modèle des utilisateurs.
  */
 @Entity
-@Table(name = "UTILISATEUR")
+@Table(name = "P_UTILISATEUR")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 public class UtilisateurModel {
