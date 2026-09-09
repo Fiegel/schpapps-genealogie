@@ -1,8 +1,7 @@
-package schpapps.genealogie.domain.ports;
+package schpapps.genealogie.domain.ports.outbound;
 
 import lombok.Getter;
 import schpapps.genealogie.domain.entite.Utilisateur;
-import schpapps.genealogie.domain.ports.outbound.UtilisateurRepository;
 
 import java.util.Map;
 import java.util.Optional;

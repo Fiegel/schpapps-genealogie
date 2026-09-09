@@ -1,5 +1,6 @@
 package schpapps.genealogie.infrastructure.entrypoints.dto;
 
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import schpapps.genealogie.domain.entite.Individu;
 
 import java.time.LocalDate;
@@ -13,10 +14,21 @@ import java.time.LocalDate;
  * @param sexe Le sexe
  * @param dateNaissance La date de naissance.
  */
-public record CreerIndividuResponse(String id,
+@Schema(description = "Modèle de données pour la réponse de création d'un individu")
+public record CreerIndividuResponse(
+        @Schema(description = "Identifiant technique", examples = "indi-123")
+        String id,
+
+        @Schema(description = "Nom de famille", examples = "Fiegel")
         String nom,
+
+        @Schema(description = "Prénom", examples = "Jean")
         String prenom,
+
+        @Schema(description = "Sexe", examples = "HOMME")
         String sexe,
+
+        @Schema(description = "Date de naissance", examples = "1990-01-01")
         LocalDate dateNaissance) {
 
     /**

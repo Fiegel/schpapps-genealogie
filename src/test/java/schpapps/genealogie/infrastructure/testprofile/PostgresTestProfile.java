@@ -1,4 +1,4 @@
-package schpapps.genealogie.infrastructure.integration;
+package schpapps.genealogie.infrastructure.testprofile;
 
 import io.quarkus.test.junit.QuarkusTestProfile;
 
