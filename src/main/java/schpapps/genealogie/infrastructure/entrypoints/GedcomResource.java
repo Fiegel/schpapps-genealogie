@@ -1,5 +1,6 @@
 package schpapps.genealogie.infrastructure.entrypoints;
 
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -14,10 +15,15 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import schpapps.genealogie.infrastructure.entrypoints.adapter.GedcomParserAdapter;
 import schpapps.genealogie.infrastructure.entrypoints.dto.ErrorResponse;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.GedcomParsed;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.RapportDiagnostic;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.SeveriteRapportDiagnostic;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 /**
  * Le controller pour l'importation de fichiers GEDCOM.
@@ -25,6 +31,9 @@ import java.nio.file.Files;
 @Path("/api/gedcom")
 @Tag(name = "GEDCOM", description = "Importation et traitement de fichiers GEDCOM")
 public class GedcomResource {
+
+    @Inject
+    GedcomParserAdapter gedcomParserAdapter;
 
     /**
      * Importe un fichier GEDCOM et lance son parsing.
@@ -42,7 +51,7 @@ public class GedcomResource {
             @APIResponse(responseCode = "200",
                     description = "Le fichier GEDCOM a été importé et traité avec succès."),
             @APIResponse(responseCode = "400",
-                    description = "Fichier manquant ou illisible (IOException).",
+                    description = "Fichier manquant ou illisible.",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = ErrorResponse.class))),
             @APIResponse(responseCode = "500",
                     description = "Erreur inattendue lors de l'importation.",
@@ -58,11 +67,16 @@ public class GedcomResource {
         }
 
         try (var inputStream = Files.newInputStream(file.filePath())) {
+            final GedcomParsed gedcomParsed = gedcomParserAdapter.parse(inputStream, file.fileName());
 
-            // Prochaine étape : appeler le cas d'usage métier
-            // var resultat = importerGedcomUseCase.executer(inputStream);
+            final List<RapportDiagnostic> rapportList = gedcomParsed.rapportDiagnosticList();
+            final boolean hasSevereDiagnostic = rapportList.stream().anyMatch(rapport -> rapport.severite() == SeveriteRapportDiagnostic.SEVERE);
+            if (hasSevereDiagnostic) {
+                // return 400 with diagnostic list
+                return Response.status(Response.Status.BAD_REQUEST).entity(rapportList).build();
+            }
 
-            return Response.ok().entity("Fichier reçu : " + file.fileName()).build();
+            return Response.ok().entity(gedcomParsed).build();
         }
     }
 }

@@ -8,13 +8,24 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import schpapps.genealogie.infrastructure.entrypoints.adapter.GedcomParserAdapter;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.GedcomParsed;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.RapportDiagnostic;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.SeveriteRapportDiagnostic;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -26,6 +37,9 @@ class GedcomResourceTest {
 
     @Mock
     private FileUpload fileUpload;
+
+    @Mock
+    private GedcomParserAdapter gedcomParserAdapter;
 
     @InjectMocks
     private GedcomResource gedcomResource;
@@ -73,18 +87,55 @@ class GedcomResourceTest {
     }
 
     @Test
-    void succes_importerGedcom_retour_200(@TempDir final Path tempDir) throws IOException {
+    void echec_importerGedcom_diagnostic_severe(@TempDir final Path tempDir) throws IOException {
         // Given
-        final Path fichierGedcomProvided = Files.createFile(tempDir.resolve("arbre.ged"));
+        final String fileNameProvided = "arbre.ged";
+        final Path fichierGedcomProvided = Files.createFile(tempDir.resolve(fileNameProvided));
+
+        final List<RapportDiagnostic> rapportDiagnosticListExpected = List.of(new RapportDiagnostic(1,
+                SeveriteRapportDiagnostic.SEVERE,
+                "Ligne 1 : En-tête invalide."));
+        final GedcomParsed gedcomParsedExpected = new GedcomParsed(fileNameProvided,
+                LocalDateTime.now(ZoneOffset.UTC),
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                rapportDiagnosticListExpected);
 
         when(fileUpload.filePath()).thenReturn(fichierGedcomProvided);
-        when(fileUpload.fileName()).thenReturn("arbre.ged");
+        when(fileUpload.fileName()).thenReturn(fileNameProvided);
+        when(gedcomParserAdapter.parse(any(InputStream.class), eq(fileNameProvided))).thenReturn(gedcomParsedExpected);
+
+        // When
+        final Response responseActual = gedcomResource.importerGedcom(fileUpload);
+
+        // Then
+        assertThat(responseActual.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        assertThat(responseActual.getEntity()).isEqualTo(rapportDiagnosticListExpected);
+    }
+
+    @Test
+    void succes_importerGedcom_retour_200(@TempDir final Path tempDir) throws IOException {
+        // Given
+        final String fileNameProvided = "arbre.ged";
+        final Path fichierGedcomProvided = Files.createFile(tempDir.resolve(fileNameProvided));
+
+        final GedcomParsed gedcomParsedExpected = new GedcomParsed(fileNameProvided,
+                LocalDateTime.now(ZoneOffset.UTC),
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList());
+
+        when(fileUpload.filePath()).thenReturn(fichierGedcomProvided);
+        when(fileUpload.fileName()).thenReturn(fileNameProvided);
+        when(gedcomParserAdapter.parse(any(InputStream.class), eq(fileNameProvided))).thenReturn(gedcomParsedExpected);
 
         // When
         final Response responseActual = gedcomResource.importerGedcom(fileUpload);
 
         // Then
         assertThat(responseActual.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-        assertThat(responseActual.getEntity()).isEqualTo("Fichier reçu : arbre.ged");
+        assertThat(responseActual.getEntity()).isEqualTo(gedcomParsedExpected);
     }
 }
