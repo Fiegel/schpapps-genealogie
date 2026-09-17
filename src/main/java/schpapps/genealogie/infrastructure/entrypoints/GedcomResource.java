@@ -1,5 +1,6 @@
-package schpapps.genealogie.infrastructure.entrypoints;
+﻿package schpapps.genealogie.infrastructure.entrypoints;
 
+import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -14,10 +15,13 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import schpapps.genealogie.infrastructure.entrypoints.adapter.GedcomParserAdapter;
 import schpapps.genealogie.infrastructure.entrypoints.dto.ErrorResponse;
+import schpapps.genealogie.infrastructure.entrypoints.valueobject.RapportDiagnostic;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 /**
  * Le controller pour l'importation de fichiers GEDCOM.
@@ -25,6 +29,9 @@ import java.nio.file.Files;
 @Path("/api/gedcom")
 @Tag(name = "GEDCOM", description = "Importation et traitement de fichiers GEDCOM")
 public class GedcomResource {
+
+    @Inject
+    GedcomParserAdapter gedcomParserAdapter;
 
     /**
      * Importe un fichier GEDCOM et lance son parsing.
@@ -59,8 +66,13 @@ public class GedcomResource {
 
         try (var inputStream = Files.newInputStream(file.filePath())) {
 
-            // Prochaine étape : appeler le cas d'usage métier
-            // var resultat = importerGedcomUseCase.executer(inputStream);
+            var parsed = gedcomParserAdapter.parse(inputStream, file.fileName());
+            List<RapportDiagnostic> rapports = parsed.rapportDiagnosticList();
+            boolean hasDiagnostics = rapports.stream().anyMatch(r -> !r.diagnosticMap().isEmpty());
+            if (hasDiagnostics) {
+                // return 400 with diagnostic list
+                return Response.status(Response.Status.BAD_REQUEST).entity(rapports).build();
+            }
 
             return Response.ok().entity("Fichier reçu : " + file.fileName()).build();
         }
