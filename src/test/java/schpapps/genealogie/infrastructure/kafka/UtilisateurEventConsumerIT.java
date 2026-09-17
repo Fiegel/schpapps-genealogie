@@ -1,6 +1,7 @@
-package schpapps.genealogie.infrastructure.integration;
+package schpapps.genealogie.infrastructure.kafka;
 
 import io.quarkus.narayana.jta.QuarkusTransaction;
+import io.quarkus.narayana.jta.QuarkusTransactionException;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.reactive.messaging.memory.InMemoryConnector;
 import io.smallrye.reactive.messaging.memory.InMemorySource;
@@ -47,13 +48,15 @@ class UtilisateurEventConsumerIT {
         utilisateurCreeEventSource.send(event);
 
         // Then
-        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
-            QuarkusTransaction.requiringNew().run(() -> {
-                var utilisateurActual = utilisateurRepository.getById(utilisateurIdProvided);
-                assertThat(utilisateurActual).isPresent();
-                assertThat(utilisateurActual.get().prenom).isEqualTo("John");
-                assertThat(utilisateurActual.get().nom).isEqualTo("Doe");
-            });
-        });
+        await().atMost(Duration.ofSeconds(5))
+                .ignoreExceptionsInstanceOf(QuarkusTransactionException.class)
+                .untilAsserted(() -> {
+                    QuarkusTransaction.requiringNew().run(() -> {
+                        var utilisateurActual = utilisateurRepository.getById(utilisateurIdProvided);
+                        assertThat(utilisateurActual).isPresent();
+                        assertThat(utilisateurActual.get().prenom).isEqualTo("John");
+                        assertThat(utilisateurActual.get().nom).isEqualTo("Doe");
+                    });
+                });
     }
 }
