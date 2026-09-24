@@ -1,26 +1,23 @@
-package schpapps.genealogie.infrastructure.integration;
+package schpapps.genealogie.infrastructure.entrypoints;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
-import schpapps.genealogie.domain.valueobject.Sexe;
-
-import java.time.LocalDate;
+import schpapps.genealogie.infrastructure.entrypoints.fakes.Erreur500TestProfile;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 
 /**
- * Tests d'intégration des endpoints REST sur les individus.
+ * Test d'intégration des endpoints REST sur les individus, simulant une erreur 500 inattendue.
  */
 @QuarkusTest
-@TestProfile(PostgresTestProfile.class)
-class IndividuResourceIT {
+@TestProfile(Erreur500TestProfile.class)
+class IndividuResourceErreur500IT {
 
     @Test
-    void succes_creerIndividu_retour_201() {
+    void erreur_500_sur_exception_imprevue() {
         // Given
         final String payloadJsonProvided = """
                 {
@@ -37,11 +34,10 @@ class IndividuResourceIT {
                 .when()
                 .post("/api/individus")
                 .then()
-                .statusCode(201)
-                .body("id", notNullValue())
-                .body("nom", equalTo("Fiegel"))
-                .body("prenom", equalTo("Jérémy"))
-                .body("sexe", equalTo(Sexe.HOMME.name()))
-                .body("dateNaissance", equalTo(LocalDate.of(1984, 11, 9).toString()));
+                .statusCode(500)
+                .body("status", equalTo(500))
+                .body("error", equalTo("Internal Server Error"))
+                .body("message", containsString("erreur inattendue"))
+                .body("timestamp", notNullValue());
     }
 }

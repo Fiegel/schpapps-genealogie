@@ -25,15 +25,29 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run All Tests (TU + TI) and SonarQube Analysis
+      - name: Run All Tests (TU + TI)
+        run: mvn -B clean verify
+
+      - name: Run SonarQube Analysis
         if: success()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          success=false
           for i in {1..3}; do
             echo "Tentative d'analyse Sonar $i/3..."
-            mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            if mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
               -Dsonar.organization=jecash666 \
               -Dsonar.projectKey=Fiegel_schpapps-genealogie \
-              -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml && break || sleep 15
+              -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco-report/jacoco.xml; then
+              success=true
+              break
+            fi
+            echo "Échec de la tentative $i/3. Nouvelle tentative dans 15 secondes..."
+            sleep 15
           done
+          
+          if [ "$success" = false ]; then
+            echo "L'analyse Sonar a échoué après 3 tentatives."
+            exit 1
+          fi

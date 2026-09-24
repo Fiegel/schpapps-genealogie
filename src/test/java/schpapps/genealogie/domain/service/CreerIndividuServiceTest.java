@@ -6,8 +6,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import schpapps.genealogie.domain.entite.Individu;
-import schpapps.genealogie.domain.ports.InMemoryIndividuRepository;
 import schpapps.genealogie.domain.ports.inbound.commande.CreerIndividuCommande;
+import schpapps.genealogie.domain.ports.outbound.InMemoryIndividuRepository;
 import schpapps.genealogie.domain.valueobject.Sexe;
 
 import java.time.LocalDate;

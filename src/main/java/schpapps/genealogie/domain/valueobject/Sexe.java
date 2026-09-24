@@ -12,6 +12,7 @@ public enum Sexe {
 
     FEMME,
     HOMME,
+    INTERSEXE,
     INCONNU;
 
     private static final Map<String, Sexe> SEXE_BY_NAME_MAP = Arrays.stream(Sexe.values()).collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
