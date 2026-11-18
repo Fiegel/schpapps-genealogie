@@ -340,11 +340,44 @@ class GedcomParserAdapterTest {
             assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.INFO);
             assertThat(rapportDiagnosticActual.message()).contains("non traité actuellement");
         }
+
+        @Test
+        @DisplayName("Doit concaténer les lignes CONC et continuer les lignes CONT avec des sauts de ligne")
+        void succes_traitement_conc_et_cont() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 @I1@ INDI
+                    1 NAME Jean /DUPONT/
+                    1 NOTE Ceci est le début d'un texte très long
+                    2 CONC  qui a été découpé.
+                    2 CONT Et voici un second paragraphe.
+                    0 TRLR
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "conc_cont.ged");
+
+            // Then
+
+            assertThat(gedcomParsedActual.individuList()).hasSize(1);
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).isEmpty();
+
+            final IndividuParsed individuParsedActual = gedcomParsedActual.individuList().getFirst();
+            assertThat(individuParsedActual.id()).isEqualTo("@I1@");
+            assertThat(individuParsedActual.informationComplementaireList()).hasSize(1)
+                    .first()
+                    .hasFieldOrPropertyWithValue("lineNumber", 5)
+                    .hasFieldOrPropertyWithValue("tag", "NOTE")
+                    .hasFieldOrPropertyWithValue("valeur", "Ceci est le début d'un texte très long qui a été découpé.\nEt voici un second paragraphe.");
+        }
     }
 
     // =========================================================================
     // 4. VALIDATION DES RÉFÉRENCES CROISÉES (RÈGLES MÉTIER)
     // =========================================================================
+
     @Nested
     @DisplayName("Validation des références croisées INDI <-> FAM")
     class ReferencesCroiseesTest {
@@ -463,7 +496,7 @@ class GedcomParserAdapterTest {
             assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
 
             final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
+            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
             assertThat(rapportDiagnosticActual.message()).contains("indique appartenir à la FAMC @F1@, mais n'est pas dans ses CHIL");
         }
 
@@ -490,7 +523,7 @@ class GedcomParserAdapterTest {
             assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
 
             final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
+            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
             assertThat(rapportDiagnosticActual.message()).contains("indique appartenir à la FAMS @F1@, mais n'est ni HUSB, ni WIFE");
         }
     }
