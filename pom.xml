@@ -21,7 +21,6 @@
         <skipITs>false</skipITs>
         <surefire-plugin.version>3.6.1</surefire-plugin.version>
         <assertj.version>3.27.7</assertj.version>
-        <lombok.version>1.18.48</lombok.version>
         <archunit.version>1.5.1</archunit.version>
 
         <sonar.coverage.exclusions>
@@ -108,13 +107,6 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <!-- Lombock -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
         </dependency>
 
         <!-- ArchUnit -->
