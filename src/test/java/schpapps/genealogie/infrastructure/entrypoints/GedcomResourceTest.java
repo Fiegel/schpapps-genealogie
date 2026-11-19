@@ -100,6 +100,7 @@ class GedcomResourceTest {
                 null,
                 Collections.emptyList(),
                 Collections.emptyList(),
+                Collections.emptyList(),
                 rapportDiagnosticListExpected);
 
         when(fileUpload.filePath()).thenReturn(fichierGedcomProvided);
@@ -123,6 +124,7 @@ class GedcomResourceTest {
         final GedcomParsed gedcomParsedExpected = new GedcomParsed(fileNameProvided,
                 LocalDateTime.now(ZoneOffset.UTC),
                 null,
+                Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList(),
                 Collections.emptyList());

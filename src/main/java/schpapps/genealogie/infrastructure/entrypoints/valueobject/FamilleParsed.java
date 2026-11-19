@@ -9,7 +9,8 @@ import java.util.List;
  * @param lineNumber Le numéro de la ligne dans le fichier GedCom où apparait cette famille.
  * @param idIndividuParent1 La référence du premier individu parent (père).
  * @param idIndividuParent2 La référence du second individu parent (mère).
- * @param idIndividuEnfantList La liste des références des individus enfants de la famille.^^^m:
+ * @param idIndividuEnfantList La liste des références des individus enfants de la famille.
+ * @param idObjetMediaList La liste des références des objets média rattachés à cette famille.
  * @param informationComplementaireList L'ensemble des autres attributs de l'entité.
  */
 public record FamilleParsed(
@@ -18,10 +19,12 @@ public record FamilleParsed(
         String idIndividuParent1,
         String idIndividuParent2,
         List<String> idIndividuEnfantList,
+        List<String> idObjetMediaList,
         List<InformationComplementaire> informationComplementaireList) {
 
     public FamilleParsed {
         idIndividuEnfantList = idIndividuEnfantList == null ? List.of() : List.copyOf(idIndividuEnfantList);
+        idObjetMediaList = idObjetMediaList == null ? List.of() : List.copyOf(idObjetMediaList);
         informationComplementaireList = informationComplementaireList == null ? List.of() : List.copyOf(informationComplementaireList);
     }
 }

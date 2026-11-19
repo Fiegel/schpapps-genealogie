@@ -141,6 +141,18 @@ class GedcomParserAdapterTest {
     class StructureGlobaleTest {
 
         @Test
+        @DisplayName("Doit échouer proprement si le fichier est complètement vide")
+        void echec_parsing_fichier_vide() throws IOException {
+            // When
+            final GedcomParsed gedcomParsedActual = parse("", "vide.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
+            assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
+            assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().message()).contains("Fichier vide invalide");
+        }
+
+        @Test
         @DisplayName("Doit échouer si le tag HEAD est absent en première ligne non vide")
         void echec_parsing_header_manquant() throws IOException {
             // Given
@@ -198,6 +210,26 @@ class GedcomParserAdapterTest {
             assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
             assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().message()).contains("Trailer invalide");
         }
+
+        @Test
+        @DisplayName("Doit réussir si le TRLR est suivi de lignes vides en fin de fichier")
+        void succes_parsing_trailer_avec_lignes_vides_a_la_fin() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 TRLR
+                    
+                    
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "trailer_espaces.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.header()).isNotNull();
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).isEmpty();
+        }
     }
 
     // =========================================================================
@@ -207,6 +239,26 @@ class GedcomParserAdapterTest {
     @Nested
     @DisplayName("Gestion de la hiérarchie et de l'arbre")
     class ArbreEtNiveauxTest {
+
+        @Test
+        @DisplayName("Doit émettre un SEVERE si un tag de niveau 0 est totalement inconnu")
+        void echec_tag_niveau_0_inconnu() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 @X1@ TAG_INVENTE
+                    0 TRLR
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "tag_inconnu.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
+            assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
+            assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().message()).contains("inconnu pour une entité de niveau 0");
+        }
 
         @Test
         @DisplayName("Doit émettre un WARNING lors d'un saut de niveau et rattacher au parent valide")
@@ -372,6 +424,27 @@ class GedcomParserAdapterTest {
                     .hasFieldOrPropertyWithValue("tag", "NOTE")
                     .hasFieldOrPropertyWithValue("valeur", "Ceci est le début d'un texte très long qui a été découpé.\nEt voici un second paragraphe.");
         }
+
+        @Test
+        @DisplayName("Doit émettre un WARNING si un tag CONT est orphelin sans parent")
+        void avertissement_cont_orphelin() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 @I1@ INDI
+                    2 CONT Ligne orpheline
+                    0 TRLR
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "cont_orphelin.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
+            assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
+            assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().message()).contains("orphelin");
+        }
     }
 
     // =========================================================================
@@ -413,6 +486,7 @@ class GedcomParserAdapterTest {
                     1 CHAR UTF-8
                     0 @F1@ FAM
                     1 HUSB @I999@
+                    1 WIFE @I998@
                     0 TRLR
                     """;
 
@@ -420,11 +494,10 @@ class GedcomParserAdapterTest {
             final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "parent_inexistant.ged");
 
             // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("référence un HUSB inexistant : @I999@");
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(2);
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).allMatch(d -> d.severite() == SeveriteRapportDiagnostic.SEVERE);
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence un HUSB inexistant : @I999@"));
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence un WIFE inexistant : @I998@"));
         }
 
         @Test
@@ -451,7 +524,7 @@ class GedcomParserAdapterTest {
         }
 
         @Test
-        @DisplayName("Doit émettre un SEVERE si l'individu référence une FAMC inexistante")
+        @DisplayName("Doit émettre un SEVERE si l'individu référence une FAMC OU FAMS inexistante")
         void echec_individu_famc_famille_inexistante() throws IOException {
             // Given
             final String gedcomContentProvided = """
@@ -459,6 +532,7 @@ class GedcomParserAdapterTest {
                     1 CHAR UTF-8
                     0 @I1@ INDI
                     1 FAMC @F999@
+                    1 FAMS @F998@
                     0 TRLR
                     """;
 
@@ -466,16 +540,15 @@ class GedcomParserAdapterTest {
             final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "famc_inexistante.ged");
 
             // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("référence une FAMC inexistante : @F999@");
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(2);
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).allMatch(d -> d.severite() == SeveriteRapportDiagnostic.SEVERE);
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence une FAMC inexistante : @F999@"));
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence une FAMS inexistante : @F998@"));
         }
 
         @Test
-        @DisplayName("Doit émettre un SEVERE si l'individu référence une FAMC mais n'y est pas listé en CHIL")
-        void echec_individu_famc_reciprocite_manquante() throws IOException {
+        @DisplayName("Doit émettre un WARNING si l'individu référence une FAMC mais n'y est pas listé en CHIL")
+        void avertissement_individu_famc_reciprocite_manquante() throws IOException {
             // Given
             final String gedcomContentProvided = """
                     0 HEAD
@@ -501,8 +574,8 @@ class GedcomParserAdapterTest {
         }
 
         @Test
-        @DisplayName("Doit émettre un SEVERE si l'individu référence une FAMS mais n'y est ni HUSB ni WIFE")
-        void echec_individu_fams_reciprocite_manquante() throws IOException {
+        @DisplayName("Doit émettre un WARNING si l'individu référence une FAMS mais n'y est ni HUSB ni WIFE")
+        void avertissement_individu_fams_reciprocite_manquante() throws IOException {
             // Given
             final String gedcomContentProvided = """
                     0 HEAD
@@ -525,6 +598,81 @@ class GedcomParserAdapterTest {
             final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
             assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
             assertThat(rapportDiagnosticActual.message()).contains("indique appartenir à la FAMS @F1@, mais n'est ni HUSB, ni WIFE");
+        }
+    }
+
+    // =========================================================================
+    // 5. OBJETS MEDIA
+    // =========================================================================
+
+    @Nested
+    @DisplayName("Gestion des objets multimédias (OBJE)")
+    class ObjetMediaTest {
+
+        @Test
+        @DisplayName("Doit émettre un SEVERE si un objet média (level 0) est dupliqué")
+        void echec_objet_media_duplique() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 @O1@ OBJE
+                    1 TITL Photo 1
+                    0 @O1@ OBJE
+                    1 TITL Photo 2
+                    0 TRLR
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "doublon_media.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
+
+            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
+            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
+            assertThat(rapportDiagnosticActual.message()).contains("Identifiant d'objet média @O1@ déjà utilisé");
+        }
+
+        @Test
+        @DisplayName("Doit extraire un OBJE interne sans référence et lui attribuer un identifiant généré")
+        void succes_extraction_objet_media_inline() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 @I1@ INDI
+                    1 NAME Jean /DUPONT/
+                    1 OBJE
+                    2 FILE photos/jean.jpg
+                    2 FORM jpg
+                    2 TITL Portrait de Jean
+                    0 TRLR
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "media_inline.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.individuList()).hasSize(1);
+            assertThat(gedcomParsedActual.objetMediaList()).hasSize(1);
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
+
+            final ObjetMediaParsed objetMediaParsedActual = gedcomParsedActual.objetMediaList().getFirst();
+            assertThat(objetMediaParsedActual.id()).isEqualTo("@SCHPAPPS_OBJE_1@");
+            assertThat(objetMediaParsedActual.titre()).isEqualTo("Portrait de Jean");
+            assertThat(objetMediaParsedActual.cheminFichier()).isEqualTo("photos/jean.jpg");
+            assertThat(objetMediaParsedActual.format()).isEqualTo("jpg");
+
+            final IndividuParsed individuParsedActual = gedcomParsedActual.individuList().getFirst();
+            assertThat(individuParsedActual.id()).isEqualTo("@I1@");
+            ;
+            assertThat(individuParsedActual.idObjetMediaList()).hasSize(1);
+            assertThat(individuParsedActual.idObjetMediaList().getFirst()).isEqualTo("@SCHPAPPS_OBJE_1@");
+
+            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
+            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.INFO);
+            assertThat(rapportDiagnosticActual.message()).contains("Objet média interne détecté");
         }
     }
 
