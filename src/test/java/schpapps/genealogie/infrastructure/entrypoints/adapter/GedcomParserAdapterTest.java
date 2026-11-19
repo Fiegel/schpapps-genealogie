@@ -4,12 +4,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import schpapps.genealogie.infrastructure.entrypoints.valueobject.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -242,7 +246,7 @@ class GedcomParserAdapterTest {
 
         @Test
         @DisplayName("Doit émettre un SEVERE si un tag de niveau 0 est totalement inconnu")
-        void echec_tag_niveau_0_inconnu() throws IOException {
+        void echec_tag_racine_inconnu() throws IOException {
             // Given
             final String gedcomContentProvided = """
                     0 HEAD
@@ -258,6 +262,29 @@ class GedcomParserAdapterTest {
             assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
             assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
             assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().message()).contains("inconnu pour une entité de niveau 0");
+        }
+
+        @Test
+        @DisplayName("Doit émettre une INFO pour un tag de niveau 0 non supporté")
+        void info_tag_racine_non_traite() throws IOException {
+            // Given
+            final String gedcomContentProvided = """
+                    0 HEAD
+                    1 CHAR UTF-8
+                    0 @S1@ SOUR
+                    1 TITL Registre paroissial
+                    0 TRLR
+                    """;
+
+            // When
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "sour_niveau_0.ged");
+
+            // Then
+            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
+
+            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
+            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.INFO);
+            assertThat(rapportDiagnosticActual.message()).contains("non traité actuellement");
         }
 
         @Test
@@ -319,78 +346,18 @@ class GedcomParserAdapterTest {
                     .hasFieldOrPropertyWithValue("valeur", "Paris");
         }
 
-        @Test
-        @DisplayName("Doit émettre un SEVERE si un individu INDI est dupliqué")
-        void echec_individu_duplique() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @I1@ INDI
-                    1 NAME Jean /DUPONT/
-                    0 @I1@ INDI
-                    1 NAME Pierre /DUPONT/
-                    0 TRLR
-                    """;
-
+        @ParameterizedTest(name = "Doit émettre un SEVERE si un {0} est dupliqué")
+        @MethodSource("fournirCasEntiteNiveau0Dupliquee")
+        void echec_entite_niveau_0_dupliquee(final String tagEntiteProvided, final String gedcomContentProvided, final String messageExpected) throws IOException {
             // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "doublon_indi.ged");
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "doublon.ged");
 
             // Then
             assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
 
             final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
             assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("Identifiant d'individu @I1@ déjà utilisé");
-        }
-
-        @Test
-        @DisplayName("Doit émettre un SEVERE si une famille FAM est dupliquée")
-        void echec_famille_dupliquee() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @I1@ INDI
-                    0 @F1@ FAM
-                    1 HUSB @I1@
-                    0 @F1@ FAM
-                    1 HUSB @I1@
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "doublon_fam.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("Identifiant de famille @F1@ déjà utilisé");
-        }
-
-        @Test
-        @DisplayName("Doit émettre une INFO pour un tag de niveau 0 non supporté")
-        void info_tag_racine_non_traite() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @S1@ SOUR
-                    1 TITL Registre paroissial
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "sour_niveau_0.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.INFO);
-            assertThat(rapportDiagnosticActual.message()).contains("non traité actuellement");
+            assertThat(rapportDiagnosticActual.message()).contains(messageExpected);
         }
 
         @Test
@@ -445,6 +412,43 @@ class GedcomParserAdapterTest {
             assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
             assertThat(gedcomParsedActual.rapportDiagnosticList().getFirst().message()).contains("orphelin");
         }
+
+        private static Stream<Arguments> fournirCasEntiteNiveau0Dupliquee() {
+            return Stream.of(Arguments.of("INDI",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @I1@ INDI
+                                    1 NAME Jean /DUPONT/
+                                    0 @I1@ INDI
+                                    1 NAME Pierre /DUPONT/
+                                    0 TRLR
+                                    """,
+                            "Identifiant d'individu @I1@ déjà utilisé"),
+                    Arguments.of("FAM",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @I1@ INDI
+                                    0 @F1@ FAM
+                                    1 HUSB @I1@
+                                    0 @F1@ FAM
+                                    1 HUSB @I1@
+                                    0 TRLR
+                                    """,
+                            "Identifiant de famille @F1@ déjà utilisé"),
+                    Arguments.of("OBJE",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @O1@ OBJE
+                                    1 TITL Photo 1
+                                    0 @O1@ OBJE
+                                    1 TITL Photo 2
+                                    0 TRLR
+                                    """,
+                            "Identifiant d'objet média @O1@ déjà utilisé"));
+        }
     }
 
     // =========================================================================
@@ -455,149 +459,116 @@ class GedcomParserAdapterTest {
     @DisplayName("Validation des références croisées INDI <-> FAM")
     class ReferencesCroiseesTest {
 
-        @Test
-        @DisplayName("Doit émettre un SEVERE si une famille ne comporte aucun membre")
-        void echec_famille_sans_aucun_membre() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @F1@ FAM
-                    0 TRLR
-                    """;
+        @ParameterizedTest(name = "{0}")
+        @MethodSource("fournirCasIncoherencesReferences")
+        @DisplayName("Doit détecter les incohérences de références croisées avec la sévérité appropriée")
+        void validation_references_croisees(final String description,
+                final String gedcomContentProvided,
+                final SeveriteRapportDiagnostic severiteExpected,
+                final String messageExpected) throws IOException {
 
             // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "famille_vide.ged");
+            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "test_ref.ged");
 
             // Then
             assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
 
             final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("La famille @F1@ n'a aucun individu");
+            assertThat(rapportDiagnosticActual.severite()).isEqualTo(severiteExpected);
+            assertThat(rapportDiagnosticActual.message()).contains(messageExpected);
         }
 
-        @Test
-        @DisplayName("Doit émettre un SEVERE si la famille référence un HUSB ou une WIFE inexistant(e)")
-        void echec_famille_reference_parent_inexistant() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @F1@ FAM
-                    1 HUSB @I999@
-                    1 WIFE @I998@
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "parent_inexistant.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(2);
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).allMatch(d -> d.severite() == SeveriteRapportDiagnostic.SEVERE);
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence un HUSB inexistant : @I999@"));
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence un WIFE inexistant : @I998@"));
-        }
-
-        @Test
-        @DisplayName("Doit émettre un SEVERE si la famille référence un CHIL inexistant")
-        void echec_famille_reference_enfant_inexistant() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @F1@ FAM
-                    1 CHIL @I999@
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "enfant_inexistant.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("référence un CHIL inexistant : @I999@");
-        }
-
-        @Test
-        @DisplayName("Doit émettre un SEVERE si l'individu référence une FAMC OU FAMS inexistante")
-        void echec_individu_famc_famille_inexistante() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @I1@ INDI
-                    1 FAMC @F999@
-                    1 FAMS @F998@
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "famc_inexistante.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(2);
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).allMatch(d -> d.severite() == SeveriteRapportDiagnostic.SEVERE);
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence une FAMC inexistante : @F999@"));
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).anyMatch(d -> d.message().contains("référence une FAMS inexistante : @F998@"));
-        }
-
-        @Test
-        @DisplayName("Doit émettre un WARNING si l'individu référence une FAMC mais n'y est pas listé en CHIL")
-        void avertissement_individu_famc_reciprocite_manquante() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @I1@ INDI
-                    1 FAMC @F1@
-                    0 @I2@ INDI
-                    1 FAMS @F1@
-                    0 @F1@ FAM
-                    1 HUSB @I2@
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "famc_non_reciproque.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
-            assertThat(rapportDiagnosticActual.message()).contains("indique appartenir à la FAMC @F1@, mais n'est pas dans ses CHIL");
-        }
-
-        @Test
-        @DisplayName("Doit émettre un WARNING si l'individu référence une FAMS mais n'y est ni HUSB ni WIFE")
-        void avertissement_individu_fams_reciprocite_manquante() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @I1@ INDI
-                    1 FAMS @F1@
-                    0 @I2@ INDI
-                    1 FAMC @F1@
-                    0 @F1@ FAM
-                    1 CHIL @I2@
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "fams_non_reciproque.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.WARNING);
-            assertThat(rapportDiagnosticActual.message()).contains("indique appartenir à la FAMS @F1@, mais n'est ni HUSB, ni WIFE");
+        private static Stream<Arguments> fournirCasIncoherencesReferences() {
+            return Stream.of(Arguments.of("Famille sans aucun membre",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @F1@ FAM
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.SEVERE,
+                            "La famille @F1@ n'a aucun individu"),
+                    Arguments.of("Famille avec un parent HUSB inexistant",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @F1@ FAM
+                                    1 HUSB @I999@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.SEVERE,
+                            "référence un HUSB inexistant : @I999@"),
+                    Arguments.of("Famille avec un parent WIFE inexistant",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @F1@ FAM
+                                    1 WIFE @I999@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.SEVERE,
+                            "référence un WIFE inexistant : @I999@"),
+                    Arguments.of("Famille avec enfant CHIL inexistant",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @F1@ FAM
+                                    1 CHIL @I999@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.SEVERE,
+                            "référence un CHIL inexistant : @I999@"),
+                    Arguments.of("Individu avec FAMC inexistante",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @I1@ INDI
+                                    1 FAMC @F999@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.SEVERE,
+                            "référence une FAMC inexistante : @F999@"
+                    ),
+                    Arguments.of("Individu avec FAMS inexistante",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @I1@ INDI
+                                    1 FAMS @F999@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.SEVERE,
+                            "référence une FAMS inexistante : @F999@"
+                    ),
+                    Arguments.of(
+                            "Individu avec FAMC sans réciprocité CHIL",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @I1@ INDI
+                                    1 FAMC @F1@
+                                    0 @I2@ INDI
+                                    1 FAMS @F1@
+                                    0 @F1@ FAM
+                                    1 HUSB @I2@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.WARNING,
+                            "indique appartenir à la FAMC @F1@, mais n'est pas dans ses CHIL"),
+                    Arguments.of("Individu avec FAMS sans réciprocité HUSB/WIFE",
+                            """
+                                    0 HEAD
+                                    1 CHAR UTF-8
+                                    0 @I1@ INDI
+                                    1 FAMS @F1@
+                                    0 @I2@ INDI
+                                    1 FAMC @F1@
+                                    0 @F1@ FAM
+                                    1 CHIL @I2@
+                                    0 TRLR
+                                    """,
+                            SeveriteRapportDiagnostic.WARNING,
+                            "indique appartenir à la FAMS @F1@, mais n'est ni HUSB, ni WIFE"));
         }
     }
 
@@ -608,31 +579,6 @@ class GedcomParserAdapterTest {
     @Nested
     @DisplayName("Gestion des objets multimédias (OBJE)")
     class ObjetMediaTest {
-
-        @Test
-        @DisplayName("Doit émettre un SEVERE si un objet média (level 0) est dupliqué")
-        void echec_objet_media_duplique() throws IOException {
-            // Given
-            final String gedcomContentProvided = """
-                    0 HEAD
-                    1 CHAR UTF-8
-                    0 @O1@ OBJE
-                    1 TITL Photo 1
-                    0 @O1@ OBJE
-                    1 TITL Photo 2
-                    0 TRLR
-                    """;
-
-            // When
-            final GedcomParsed gedcomParsedActual = parse(gedcomContentProvided, "doublon_media.ged");
-
-            // Then
-            assertThat(gedcomParsedActual.rapportDiagnosticList()).hasSize(1);
-
-            final RapportDiagnostic rapportDiagnosticActual = gedcomParsedActual.rapportDiagnosticList().getFirst();
-            assertThat(rapportDiagnosticActual.severite()).isEqualTo(SeveriteRapportDiagnostic.SEVERE);
-            assertThat(rapportDiagnosticActual.message()).contains("Identifiant d'objet média @O1@ déjà utilisé");
-        }
 
         @Test
         @DisplayName("Doit extraire un OBJE interne sans référence et lui attribuer un identifiant généré")
