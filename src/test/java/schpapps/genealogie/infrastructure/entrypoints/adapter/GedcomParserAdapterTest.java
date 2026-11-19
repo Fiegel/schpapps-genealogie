@@ -111,7 +111,7 @@ class GedcomParserAdapterTest {
             // Given
             // En ANSEL, l'octet 0xE2 représente l'accent aigu (placé avant la lettre)
             // 0xE2 + 'e' doit donner 'é'
-            final byte[] bytesAnselProvided = new byte[]{
+            final byte[] bytesAnselProvided = {
                     '0', ' ', 'H', 'E', 'A', 'D', '\n',
                     '1', ' ', 'C', 'H', 'A', 'R', ' ', 'A', 'N', 'S', 'E', 'L', '\n',
                     '0', ' ', '@', 'I', '1', '@', ' ', 'I', 'N', 'D', 'I', '\n',

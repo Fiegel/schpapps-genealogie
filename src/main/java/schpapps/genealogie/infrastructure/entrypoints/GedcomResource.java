@@ -1,6 +1,5 @@
 package schpapps.genealogie.infrastructure.entrypoints;
 
-import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -32,8 +31,16 @@ import java.util.List;
 @Tag(name = "GEDCOM", description = "Importation et traitement de fichiers GEDCOM")
 public class GedcomResource {
 
-    @Inject
-    GedcomParserAdapter gedcomParserAdapter;
+    private final GedcomParserAdapter gedcomParserAdapter;
+
+    /**
+     * Constructeur valué.
+     *
+     * @param gedcomParserAdapter Le parser de fichiers GedCom.
+     */
+    public GedcomResource(final GedcomParserAdapter gedcomParserAdapter) {
+        this.gedcomParserAdapter = gedcomParserAdapter;
+    }
 
     /**
      * Importe un fichier GEDCOM et lance son parsing.
