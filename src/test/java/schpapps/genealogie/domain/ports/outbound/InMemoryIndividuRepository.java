@@ -1,8 +1,6 @@
-package schpapps.genealogie.domain.ports;
+package schpapps.genealogie.domain.ports.outbound;
 
-import lombok.Getter;
 import schpapps.genealogie.domain.entite.Individu;
-import schpapps.genealogie.domain.ports.outbound.IndividuRepository;
 import schpapps.genealogie.domain.valueobject.Sexe;
 
 import java.time.LocalDate;
@@ -16,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class InMemoryIndividuRepository implements IndividuRepository {
 
-    @Getter
     private final Map<String, Individu> individuMap;
 
     public InMemoryIndividuRepository() {

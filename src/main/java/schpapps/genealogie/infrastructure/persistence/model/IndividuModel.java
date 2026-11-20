@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Entity
 @Table(name = "INDIVIDU")
@@ -65,5 +66,27 @@ public class IndividuModel {
 
     public void setDateNaissance(final LocalDate dateNaissance) {
         this.dateNaissance = dateNaissance;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final IndividuModel that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "IndividuModel {"
+                + "id='" + id + '\''
+                + ", nom='" + nom + '\''
+                + ", prenom='" + prenom + '\''
+                + ", sexe='" + sexe + '\''
+                + ", dateNaissance=" + dateNaissance
+                + '}';
     }
 }
