@@ -424,7 +424,7 @@ class GedcomParserAdapterTest {
                                     1 NAME Pierre /DUPONT/
                                     0 TRLR
                                     """,
-                            "Identifiant d'individu @I1@ déjà utilisé"),
+                            "Identifiant INDI (INDIVIDUAL) @I1@ déjà utilisé"),
                     Arguments.of("FAM",
                             """
                                     0 HEAD
@@ -436,7 +436,7 @@ class GedcomParserAdapterTest {
                                     1 HUSB @I1@
                                     0 TRLR
                                     """,
-                            "Identifiant de famille @F1@ déjà utilisé"),
+                            "Identifiant FAM (FAMILY) @F1@ déjà utilisé"),
                     Arguments.of("OBJE",
                             """
                                     0 HEAD
@@ -447,7 +447,7 @@ class GedcomParserAdapterTest {
                                     1 TITL Photo 2
                                     0 TRLR
                                     """,
-                            "Identifiant d'objet média @O1@ déjà utilisé"));
+                            "Identifiant OBJE (OBJECT) @O1@ déjà utilisé"));
         }
     }
 
@@ -527,7 +527,7 @@ class GedcomParserAdapterTest {
                                     0 TRLR
                                     """,
                             SeveriteRapportDiagnostic.SEVERE,
-                            "référence une FAMC inexistante : @F999@"
+                            "référence un FAMC inexistant : @F999@"
                     ),
                     Arguments.of("Individu avec FAMS inexistante",
                             """
@@ -538,7 +538,7 @@ class GedcomParserAdapterTest {
                                     0 TRLR
                                     """,
                             SeveriteRapportDiagnostic.SEVERE,
-                            "référence une FAMS inexistante : @F999@"
+                            "référence un FAMS inexistant : @F999@"
                     ),
                     Arguments.of(
                             "Individu avec FAMC sans réciprocité CHIL",
