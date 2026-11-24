@@ -612,7 +612,7 @@ class GedcomParserAdapterTest {
 
             final IndividuParsed individuParsedActual = gedcomParsedActual.individuList().getFirst();
             assertThat(individuParsedActual.id()).isEqualTo("@I1@");
-            ;
+
             assertThat(individuParsedActual.idObjetMediaList()).hasSize(1);
             assertThat(individuParsedActual.idObjetMediaList().getFirst()).isEqualTo("@SCHPAPPS_OBJE_1@");
 
