@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests unitaires de l'énumération Sexe.
  */
-public class SexeTest {
+class SexeTest {
 
     @Test
     void devrait_retourner_sexe_approprie() {

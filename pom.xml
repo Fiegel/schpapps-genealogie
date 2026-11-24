@@ -17,18 +17,18 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.36.2</quarkus.platform.version>
+        <quarkus.platform.version>3.40.1.1</quarkus.platform.version>
         <skipITs>false</skipITs>
-        <surefire-plugin.version>3.5.4</surefire-plugin.version>
-        <jacoco-plugin.version>0.8.15</jacoco-plugin.version>
+        <surefire-plugin.version>3.6.1</surefire-plugin.version>
         <assertj.version>3.27.7</assertj.version>
-        <lombok.version>1.18.46</lombok.version>
-        <archunit.version>1.4.2</archunit.version>
+        <archunit.version>1.5.1</archunit.version>
 
         <sonar.coverage.exclusions>
-            **/domain/ports/inbound/commande/**,
-            **/infrastructure/kafka/event/**,
-            **/infrastructure/persistence/model/**
+            <!-- Scan du domain important uniquement -->
+            **/domain/ports/**,
+            **/infrastructure/**,
+            **/dto/**,
+            **/config/**
         </sonar.coverage.exclusions>
     </properties>
 
@@ -109,13 +109,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Lombock -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
-
         <!-- ArchUnit -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
@@ -149,10 +142,22 @@
                 </configuration>
             </plugin>
             <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>@{argLine}</argLine>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                    </argLine>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
@@ -171,7 +176,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>@{argLine}</argLine>
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading
+                        --add-opens=java.base/java.lang.invoke=ALL-UNNAMED
+                    </argLine>
                     <systemPropertyVariables>
                         <quarkus.profile>it</quarkus.profile>
                         <native.image.path>${project.build.directory}/${project.build.finalName}-runner

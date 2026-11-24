@@ -1,16 +1,12 @@
 package schpapps.genealogie.domain.entite;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import java.util.Objects;
 
 /**
  * Un utilisateur de l'application.
  */
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
 public class Utilisateur {
 
-    @EqualsAndHashCode.Include
     public final String id;
 
     public final String nom;
@@ -28,5 +24,25 @@ public class Utilisateur {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final Utilisateur that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Utilisateur {"
+                + "id='" + id + '\''
+                + ", nom='" + nom + '\''
+                + ", prenom='" + prenom + '\''
+                + '}';
     }
 }

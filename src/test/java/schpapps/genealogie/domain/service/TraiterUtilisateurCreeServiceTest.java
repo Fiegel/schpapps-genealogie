@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import schpapps.genealogie.domain.ports.InMemoryUtilisateurRepository;
 import schpapps.genealogie.domain.ports.inbound.commande.TraiterUtilisateurCreeCommande;
+import schpapps.genealogie.domain.ports.outbound.InMemoryUtilisateurRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;

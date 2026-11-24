@@ -22,9 +22,7 @@ class CleanArchitectureTest {
         final ArchRule regleDomainIndependant = classes()
                 .that().resideInAPackage("..schpapps.genealogie.domain..")
                 .should().onlyDependOnClassesThat()
-                .resideInAnyPackage("..schpapps.genealogie.domain..",
-                        "java..",
-                        "lombok..");
+                .resideInAnyPackage("..schpapps.genealogie.domain..", "java..");
 
         regleDomainIndependant.check(new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
@@ -40,7 +38,6 @@ class CleanArchitectureTest {
                 .resideInAnyPackage("..schpapps.genealogie.domain..",
                         "..schpapps.genealogie.provider..",
                         "java..",
-                        "lombok..",
                         "org.junit..",
                         "org.assertj..");
 

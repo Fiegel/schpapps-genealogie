@@ -1,22 +1,18 @@
 package schpapps.genealogie.domain.entite;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import schpapps.genealogie.domain.valueobject.Sexe;
 
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
  * Un individu.
  */
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
 public class Individu {
 
     private static final String PREFIXE_ID = "indi-";
 
-    @EqualsAndHashCode.Include
     public final String id;
 
     public final String nom;
@@ -64,5 +60,27 @@ public class Individu {
         final String idGenere = PREFIXE_ID + UUID.randomUUID().toString();
 
         return new Individu(idGenere, nom, prenom, sexe, dateNaissance);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (!(o instanceof final Individu individu)) return false;
+        return Objects.equals(id, individu.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Individu {"
+                + "id='" + id + '\''
+                + ", nom='" + nom + '\''
+                + ", prenom='" + prenom + '\''
+                + ", sexe=" + sexe
+                + ", dateNaissance=" + dateNaissance
+                + '}';
     }
 }
